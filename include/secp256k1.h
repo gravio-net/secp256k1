@@ -88,8 +88,8 @@ typedef struct {
  *  it directly.
  *
  *  The exact representation of data inside is implementation defined and not
- *  guaranteed to be portable between different platforms or versions. It is however
- *  guaranteed to be 73 bytes in size, and can be safely copied/moved.
+ *  guaranteed to be portable between different platforms or versions. It can
+ *  be safely copied/moved.
  */
 typedef struct {
     /* magic is set during initialization */

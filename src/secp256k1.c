@@ -638,11 +638,6 @@ static int secp256k1_ec_commit_tweak(const secp256k1_context *ctx, unsigned char
 static int secp256k1_ec_commit(const secp256k1_context* ctx, secp256k1_pubkey *commitment, const secp256k1_pubkey *pubkey, const unsigned char *data, size_t data_size) {
     unsigned char tweak[32];
 
-    VERIFY_CHECK(ctx != NULL);
-    ARG_CHECK(commitment != NULL);
-    ARG_CHECK(pubkey != NULL);
-    ARG_CHECK(data != NULL);
-
     *commitment = *pubkey;
     if (!secp256k1_ec_commit_tweak(ctx, tweak, commitment, data, data_size)) {
         return 0;
@@ -655,10 +650,6 @@ static int secp256k1_ec_commit(const secp256k1_context* ctx, secp256k1_pubkey *c
 static int secp256k1_ec_commit_seckey(const secp256k1_context* ctx, unsigned char *seckey, const secp256k1_pubkey *pubkey, const unsigned char *data, size_t data_size) {
     unsigned char tweak[32];
     secp256k1_pubkey pubkey_tmp;
-
-    VERIFY_CHECK(ctx != NULL);
-    ARG_CHECK(seckey != NULL);
-    ARG_CHECK(data != NULL);
 
     if (pubkey == NULL) {
         /* Compute pubkey from seckey if not provided */
@@ -689,11 +680,6 @@ static int secp256k1_ec_commit_verify(const secp256k1_context* ctx, const secp25
     secp256k1_ge p;
     secp256k1_pubkey commitment_tmp;
 
-    VERIFY_CHECK(ctx != NULL);
-    ARG_CHECK(commitment != NULL);
-    ARG_CHECK(pubkey != NULL);
-    ARG_CHECK(data != NULL);
-
     if (!secp256k1_ec_commit(ctx, &commitment_tmp, pubkey, data, data_size)) {
         return 0;
     }
@@ -701,14 +687,14 @@ static int secp256k1_ec_commit_verify(const secp256k1_context* ctx, const secp25
     /* Return commitment == commitment_tmp */
     secp256k1_gej_set_infinity(&pj);
     secp256k1_pubkey_load(ctx, &p, &commitment_tmp);
-    secp256k1_gej_add_ge(&pj, &pj, &p);
+    secp256k1_gej_add_ge_var(&pj, &pj, &p, NULL);
     secp256k1_pubkey_load(ctx, &p, commitment);
     secp256k1_ge_neg(&p, &p);
-    secp256k1_gej_add_ge(&pj, &pj, &p);
+    secp256k1_gej_add_ge_var(&pj, &pj, &p, NULL);
     return secp256k1_gej_is_infinity(&pj);
 }
 
-static uint64_t s2c_opening_magic = 0x5d0520b8b7f2b168;
+static char s2c_opening_magic[8] = { 0x5d, 0x05, 0x20, 0xb8, 0xb7, 0xf2, 0xb1, 0x68 };
 static void secp256k1_s2c_opening_init(secp256k1_s2c_opening *opening) {
     memcpy(opening->magic, &s2c_opening_magic, sizeof(opening->magic));
     opening->nonce_is_negated = 0;

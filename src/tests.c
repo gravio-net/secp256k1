@@ -2372,22 +2372,13 @@ void test_ec_commit_api(void) {
     secp256k1_pubkey pubkey;
     secp256k1_pubkey commitment;
     unsigned char data[32];
-    int32_t ecount;
 
     memset(data, 23, sizeof(data));
-    secp256k1_context_set_illegal_callback(ctx, counting_illegal_callback_fn, &ecount);
 
     /* Create random keypair */
     secp256k1_rand256(seckey);
     CHECK(secp256k1_ec_pubkey_create(ctx, &pubkey, seckey));
 
-    ecount = 0;
-    CHECK(secp256k1_ec_commit(ctx, NULL, &pubkey, data, 1) == 0);
-    CHECK(ecount == 1);
-    CHECK(secp256k1_ec_commit(ctx, &commitment, NULL, data, 1) == 0);
-    CHECK(ecount == 2);
-    CHECK(secp256k1_ec_commit(ctx, &commitment, &pubkey, NULL, 1) == 0);
-    CHECK(ecount == 3);
     CHECK(secp256k1_ec_commit(ctx, &commitment, &pubkey, data, 1) == 1);
     /* The same pubkey can be both input and output of the function */
     {
@@ -2396,9 +2387,6 @@ void test_ec_commit_api(void) {
         CHECK(memcmp(commitment.data, pubkey_tmp.data, sizeof(commitment.data)) == 0);
     }
 
-    ecount = 0;
-    CHECK(secp256k1_ec_commit_seckey(ctx, NULL, &pubkey, data, 1) == 0);
-    CHECK(ecount == 1);
     /* If the pubkey is not provided it will be computed from seckey */
     CHECK(secp256k1_ec_commit_seckey(ctx, seckey, NULL, data, 1) == 1);
     CHECK(test_ec_commit_seckey(seckey, &commitment) == 1);
@@ -2408,17 +2396,8 @@ void test_ec_commit_api(void) {
         memset(overflowed_seckey, 0xFF, sizeof(overflowed_seckey));
         CHECK(secp256k1_ec_commit_seckey(ctx, overflowed_seckey, NULL, data, 1) == 0);
     }
-    CHECK(secp256k1_ec_commit_seckey(ctx, seckey, &pubkey, NULL, 1) == 0);
-    CHECK(ecount == 2);
 
-    ecount = 0;
     CHECK(secp256k1_ec_commit_verify(ctx, &commitment, &pubkey, data, 1) == 1);
-    CHECK(secp256k1_ec_commit_verify(ctx, NULL, &pubkey, data, 1) == 0);
-    CHECK(ecount == 1);
-    CHECK(secp256k1_ec_commit_verify(ctx, &commitment, NULL, data, 1) == 0);
-    CHECK(ecount == 2);
-    CHECK(secp256k1_ec_commit_verify(ctx, &commitment, &pubkey, NULL, 1) == 0);
-    CHECK(ecount == 3);
 
     /* Commitment to 0-len data should fail */
     CHECK(secp256k1_ec_commit(ctx, &commitment, &pubkey, data, 0) == 0);
@@ -4118,7 +4097,9 @@ void run_s2c_opening_test(void) {
 
     secp256k1_context_set_illegal_callback(ctx, counting_illegal_callback_fn, &ecount);
 
-    /* Uninitialized opening can't be serialized */
+    /* Uninitialized opening can't be serialized. Actually testing that would be
+     * undefined behavior. Therefore we simulate it by setting the opening to 0. */
+    memset(&opening, 0, sizeof(opening));
     CHECK(ecount == 0);
     CHECK(secp256k1_s2c_opening_serialize(ctx, output, &opening) == 0);
     CHECK(ecount == 1);
