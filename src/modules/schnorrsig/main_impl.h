@@ -90,14 +90,14 @@ int secp256k1_schnorrsig_sign(const secp256k1_context* ctx, secp256k1_schnorrsig
     secp256k1_ecmult_gen(&ctx->ecmult_gen_ctx, &pkj, &x);
     secp256k1_ge_set_gej(&pk, &pkj);
 
-    if(s2c_data32 != NULL) {
+    if (s2c_data32 != NULL) {
         /* Provide s2c_data32 and ndata (if not NULL) to the the nonce function
          * as additional data to derive the nonce from. If both pointers are
          * not NULL, they need to be hashed to get the nonce data 32 bytes.
          * Even if only s2c_data32 is not NULL, it's hashed because it should
          * be possible to derive nonces even if only a SHA256 commitment to the
-         * data is known.  This is for example important in the
-         * anti-nonce-sidechannel protocol.
+         * data is known. This is for example important in the anti nonce
+         * sidechannel protocol.
          */
         secp256k1_sha256_initialize(&sha);
         secp256k1_sha256_write(&sha, s2c_data32, 32);

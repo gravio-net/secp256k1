@@ -57,6 +57,7 @@ void test_schnorrsig_api(secp256k1_scratch_space *scratch) {
     secp256k1_rand256(sk2);
     secp256k1_rand256(sk3);
     secp256k1_rand256(msg);
+    secp256k1_rand256(s2c_data32);
     CHECK(secp256k1_ec_pubkey_create(ctx, &pk[0], sk1) == 1);
     CHECK(secp256k1_ec_pubkey_create(ctx, &pk[1], sk2) == 1);
     CHECK(secp256k1_ec_pubkey_create(ctx, &pk[2], sk3) == 1);
@@ -118,8 +119,11 @@ void test_schnorrsig_api(secp256k1_scratch_space *scratch) {
     CHECK(secp256k1_schnorrsig_verify_s2c_commit(vrfy, &sig, data32, NULL) == 0);
     CHECK(ecount == 4);
     {
-        /* Verification with uninitialized s2c_opening should fail */
+        /* Verification with uninitialized s2c_opening should fail. Actually testing
+         * that would be undefined behavior. Therefore we simulate it by setting the
+         * opening to 0. */
         secp256k1_s2c_opening s2c_opening_tmp;
+        memset(&s2c_opening_tmp, 0, sizeof(s2c_opening_tmp));
         CHECK(secp256k1_schnorrsig_verify_s2c_commit(vrfy, &sig, data32, &s2c_opening_tmp) == 0);
         CHECK(ecount == 5);
     }
